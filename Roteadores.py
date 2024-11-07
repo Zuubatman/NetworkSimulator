@@ -18,9 +18,9 @@ def listen():
     while (True):
 
         try:
-            command, clientAddress = serverSocket.recvfrom(2048)
+            message, clientAddress = serverSocket.recvfrom(2048)
             print(F"Listening Address: {clientAddress}")
-            print(command)
+            print(message)
 
         except timeout:      
             continue
@@ -33,7 +33,7 @@ def addInTable(neighborIp, dist, exitIp):
 
 
 def readNeighbors():
-    neighborsFile = input("Insira o caminho para o arquivo: ")
+    neighborsFile = 'C:\\Users\\JoaoVitor_Morandi\\Projects\\opaa\\NetworkSimulator\\Roteadores.txt'
 
     with open(neighborsFile, 'rb') as file:
             neighborsRaw = file.read()
