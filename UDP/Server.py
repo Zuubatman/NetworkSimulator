@@ -117,7 +117,7 @@ def listen():
         try:
             command, clientAddress = serverSocket.recvfrom(2048)
             print(F"Listening Address: {clientAddress}")
-            client(command, clientAddress)
+            # client(command, clientAddress)
 
         except timeout:      
             continue
