@@ -1,9 +1,10 @@
 from socket import *
 import threading
+import time
 
-serverPort = 40000
+serverPort = 9000
 
-customIP = '10.17.141.103'
+customIP = '192.168.15.82'
 
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 
@@ -12,46 +13,156 @@ serverSocket.bind((customIP, serverPort))
 serverSocket.settimeout(2)
 
 table = []      
+lastMSG = {}
 
 def listen():
     print("Router is Listening...")
-    while (True):
-
+    while True:
         try:
             message, clientAddress = serverSocket.recvfrom(2048)
-            print(F"Listening Address: {clientAddress}")
-            print(message)
+            print(f"Listening Address: {clientAddress}")
+            msg = message.decode('utf-8')  
+            print(msg)
+
+            ipAddress = clientAddress[0]
+            lastMSG[ipAddress] = time.time()
+            
+            if msg.startswith('*'):
+                ip = msg[1:]
+                addInTable(ip, 1, clientAddress)
+                
+            elif msg.startswith('@'):
+                routes = msg.split('@')[1:]
+                for route in routes:
+                    parts = route.split('-')
+                    ip = parts[0]  
+                    dist = int(parts[1])  
+                    v = addInTable(ip, dist+1, clientAddress)
+                    if(v==True):
+                        routeAnnouncement()
+            elif msg.startswith('!'):
+                message = msg.split('!')[1:]
+                for mess in message:
+                    parts = mess.split(';')
+                    orig = parts[0]
+                    dest = parts[1]
+                    mes =  parts[2]
+                    if(dest==customIP):
+                        print(f'Mensagem recebida.')
+                        print(f"{orig}: {mes}")
+                    else:
+                        for i in table:
+                           if i['neighborIp'] == dest:
+                            serverSocket.sendto(msg.encode(), i['exitIp'])
 
         except timeout:      
             continue
         
-        except  (e):
+        except Exception as e:
+            print(e)
+def sendMSG():
+    while True:
+        try:
+            routerIp = input("Informe o endereço IP do roteador destino: ")
+            message = input("Digite a mensagem que deseja enviar: ")
+            message = '!'+ customIP +';' + routerIp + ';' +message
+            for i in table:
+                if i['neighborIp'] == routerIp:
+                    serverSocket.sendto(message.encode(), i['exitIp'])
+                    print(f"Mensagem enviada para {routerIp}: {message}")
+                    break
+            else: print("Roteador não encontrado na tabela.")
+        except timeout:      
+            continue
+        
+        except Exception as e:
+            print(e)
+
+def forgotNeighbor():
+    while True:
+        try:
+            currentTime = time.time()
+            for neighborIp, lastTime in list(lastMSG.items()):
+                if currentTime - lastTime > 35:
+                    for i in table:
+                        if i['neighborIp'] == neighborIp:
+                            table.remove(i)
+                    print(f"Vizinho {neighborIp} está inativo a mais de 35 segundos e foi removido.")
+                    del lastMSG[neighborIp]  
+            time.sleep(5)
+        except timeout:      
+            continue
+        
+        except Exception as e:
             print(e)
 
 def addInTable(neighborIp, dist, exitIp):
+    # não ter rota para ele mesmo.
+    for i in table:
+        if i['neighborIp'] == neighborIp:
+            if dist < i['dist']:
+                table.remove(i)
+            else:
+                return
+            break    
     table.append({'neighborIp': neighborIp, 'dist': dist, 'exitIp': exitIp})
+    print(f"Tabela adicionada com o ip: {neighborIp} e métrica: {dist}.")
+    return True
+
+def sendMSGNeighbor(msg):
+    for i in table:
+        if(i['dist']==1):
+            serverSocket.sendto(msg.encode(), i['exitIp'])
+
+def routeAnnouncement():
+    msg =''
+    for i in table:
+        ip = i['neighborIp']
+        dist = i['dist']
+        msg += '@' + ip + '-' + str(dist)
+    sendMSGNeighbor(msg)
+
+def showRoutesTable():
+    msg ='|       IP       |  | Métrica |  |    Origem     |\n'         
+    for i in table:
+        ip = i['neighborIp']
+        dist = i['dist']
+        exitIp = i['exitIp'][0]
+        msg += f'  ' + ip + '          ' + str(dist) + '         ' + exitIp +  ' \n'
+    print(msg)
+
+
+def scheduleRouteAnnouncement():
+    while True:
+        routeAnnouncement()
+        time.sleep(15)
+        routeAnnouncement()
+        time.sleep(15)
+        showRoutesTable()
 
 
 def readNeighbors():
-    neighborsFile = 'C:\\Users\\JoaoVitor_Morandi\\Projects\\opaa\\NetworkSimulator\\Roteadores.txt'
+    neighborsFile = 'Roteadores.txt'
 
     with open(neighborsFile, 'rb') as file:
             neighborsRaw = file.read()
                
     neighborsStr = neighborsRaw.decode('utf-8')
 
-    neighbors = neighborsStr.split(',')
+    neighbors = neighborsStr.splitlines() 
         
     for i in neighbors:
-        routerAddress = (i, 40000)
+        routerAddress = (i, 9000)
+        serverSocket.sendto(('*'+customIP).encode(), routerAddress)
         addInTable(i, 1, routerAddress)
-        serverSocket.sendto('Joia'.encode(), routerAddress)
 
 
 def run () :
     print(f"Starting Router {serverSocket}")
     threading.Thread(target=listen).start()
     readNeighbors()
-
+    threading.Thread(target=scheduleRouteAnnouncement).start()
+    threading.Thread(target=forgotNeighbor).start()
+    threading.Thread(target=sendMSG).start()
 
 run()
