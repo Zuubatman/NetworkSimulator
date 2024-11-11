@@ -48,6 +48,10 @@ def send_announcement():
 def update_routing_table(received_message, sender_ip):
     updates = False
     routes = received_message[1:].split("@")
+    # Marca o remetente como "ativo" ao atualizar o timestamp de last_update
+    if sender_ip in routing_table:
+        routing_table[sender_ip]["last_update"] = time.time()
+    
     for route in routes:
         dest_ip, metric = route.split("-")
         metric = int(metric) + 1
@@ -112,7 +116,7 @@ def menu():
         print("2. Enviar mensagem de texto para outro roteador")
         print("3. Sair")
         
-        choice = input("Escolha uma opção:\n").strip()
+        choice = input("Escolha uma opção: ").strip()
         
         if choice == '1':
             display_routing_table()
