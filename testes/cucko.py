@@ -55,7 +55,11 @@ def update_routing_table(received_message, sender_ip):
     for route in routes:
         dest_ip, metric = route.split("-")
         metric = int(metric) + 1
-        if dest_ip != serverIP:  # Evita adicionar rota para o próprio IP
+        # Atualiza o timestamp de last_update para todos os roteadores na tabela recebida
+        if dest_ip != serverIP:
+            if dest_ip in routing_table:
+                routing_table[dest_ip]["last_update"] = time.time()
+            # Se a rota não existir ou a nova métrica for menor, atualiza a rota
             if dest_ip not in routing_table or metric < routing_table[dest_ip]["metric"]:
                 routing_table[dest_ip] = {"metric": metric, "next_hop": sender_ip, "last_update": time.time()}
                 updates = True
