@@ -1,6 +1,6 @@
 from socket import *
 import threading
-serverName = 'localhost'
+serverName = '192.168.15.130'
 
 serverPort = 40000
 

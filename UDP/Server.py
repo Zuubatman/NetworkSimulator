@@ -5,7 +5,7 @@ serverPort = 40000
 
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 
-serverSocket.bind(('', serverPort))
+serverSocket.bind(('192.168.15.130', serverPort))
 
 serverSocket.settimeout(2)
 
