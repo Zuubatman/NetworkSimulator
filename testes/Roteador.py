@@ -17,12 +17,15 @@ def load_config():
     with open("roteadores.txt", "r") as file:
         for line in file:
             neighbor_ip = line.strip()
-            neighbors.append(neighbor_ip)
-            routing_table[neighbor_ip] = {"metric": 1, "next_hop": neighbor_ip, "last_update": time.time()}
+            # Evita adicionar uma rota para o próprio IP
+            if neighbor_ip != serverIP:
+                neighbors.append(neighbor_ip)
+                routing_table[neighbor_ip] = {"metric": 1, "next_hop": neighbor_ip, "last_update": time.time()}
     print("Tabela de roteamento inicial:", routing_table)
 
 # Função para enviar tabela de roteamento para vizinhos (Mensagem 1)
 def send_routing_table():
+    # Exclui o próprio IP das mensagens de tabela de roteamento enviadas aos vizinhos
     message = "@" + "@".join(f"{ip}-{info['metric']}" for ip, info in routing_table.items() if ip != serverIP)
     for neighbor_ip in neighbors:
         try:
@@ -48,9 +51,10 @@ def update_routing_table(received_message, sender_ip):
     for route in routes:
         dest_ip, metric = route.split("-")
         metric = int(metric) + 1
-        if dest_ip not in routing_table or metric < routing_table[dest_ip]["metric"]:
-            routing_table[dest_ip] = {"metric": metric, "next_hop": sender_ip, "last_update": time.time()}
-            updates = True
+        if dest_ip != serverIP:  # Evita adicionar rota para o próprio IP
+            if dest_ip not in routing_table or metric < routing_table[dest_ip]["metric"]:
+                routing_table[dest_ip] = {"metric": metric, "next_hop": sender_ip, "last_update": time.time()}
+                updates = True
     if updates:
         send_routing_table()
 
@@ -62,7 +66,7 @@ def handle_message(message, clientAddress):
     elif message.startswith("*"):
         # Mensagem de anúncio de roteador
         neighbor_ip = message[1:]
-        if neighbor_ip not in routing_table:
+        if neighbor_ip != serverIP and neighbor_ip not in routing_table:
             routing_table[neighbor_ip] = {"metric": 1, "next_hop": neighbor_ip, "last_update": time.time()}
             if neighbor_ip not in neighbors:
                 neighbors.append(neighbor_ip)
@@ -108,7 +112,7 @@ def menu():
         print("2. Enviar mensagem de texto para outro roteador")
         print("3. Sair")
         
-        choice = input("Escolha uma opção: ").strip()
+        choice = input("Escolha uma opção:\n").strip()
         
         if choice == '1':
             display_routing_table()
