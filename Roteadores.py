@@ -4,7 +4,7 @@ import time
 
 serverPort = 9000
 
-customIP = '192.168.238.179'
+customIP = '172.20.10.3'
 
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 
@@ -86,7 +86,7 @@ def forgotNeighbor():
             for neighborIp, lastTime in list(lastMSG.items()):
                 if currentTime - lastTime > 35:
                     for i in table:
-                        if i['neighborIp'] == neighborIp and i['dist']==1:
+                        if i['neighborIp'] == neighborIp and i['exitIp'][0]==neighborIp:
                             table.remove(i)
                     print(f"Vizinho {neighborIp} está inativo a mais de 35 segundos e foi removido.")
                     del lastMSG[neighborIp]  
@@ -98,7 +98,7 @@ def forgotNeighbor():
             print(e)
 
 def addInTable(neighborIp, dist, exitIp):
-    if neighborIp == customIP or exitIp == serverSocket: return False
+    if neighborIp == customIP or exitIp == serverSocket or neighborIp==exitIp[0]: return False
     for i in table:
         if i['neighborIp'] == neighborIp:
             if dist < i['dist']:
