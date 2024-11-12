@@ -98,7 +98,7 @@ def forgotNeighbor():
             print(e)
 
 def addInTable(neighborIp, dist, exitIp):
-    # if neighborIp == customIP or exitIp == serverSocket: return False
+    if neighborIp == customIP or exitIp == serverSocket: return False
     var=True
     for i in table:  
         if i['neighborIp'] == neighborIp:
@@ -124,8 +124,8 @@ def compareTable(clientAdress, routes):
                     dist = int(parts[1])  
                     if i['neighborIp'] == ip:
                         isOnTable = True
-                        if i['dist'] < dist: #+1
-                            i['dist'] = i['dist']  #+1
+                        if i['dist'] < dist+1:
+                            i['dist'] = i['dist'] +1
             if isOnTable == False:
                 table.remove(i)
             isOnTable = False
