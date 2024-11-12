@@ -4,7 +4,7 @@ import time
 
 serverPort = 9000
 
-customIP = '192.168.15.82'
+customIP = '192.168.238.179'
 
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 
@@ -64,8 +64,8 @@ def listen():
 def sendMSG():
     while True:
         try:
-            routerIp = input("Informe o endereço IP do roteador destino: ")
-            message = input("Digite a mensagem que deseja enviar: ")
+            routerIp = input("Informe o endereço IP do roteador destino: \n")
+            message = input("Digite a mensagem que deseja enviar: \n")
             message = '!'+ customIP +';' + routerIp + ';' +message
             for i in table:
                 if i['neighborIp'] == routerIp:
