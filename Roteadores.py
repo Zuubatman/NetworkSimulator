@@ -104,8 +104,7 @@ def addInTable(neighborIp, dist, exitIp):
         if i['neighborIp'] == neighborIp:
             var=False
             if dist < i['dist']:
-                var=True
-                table.remove(i)
+                i['dist'] = dist
             else:
                 return
             break    
@@ -126,7 +125,8 @@ def compareTable(clientAdress, routes):
                         isOnTable = True
                         if i['dist'] < dist+1:
                             i['dist'] = i['dist'] +1
-            if isOnTable == False:
+            if isOnTable == False and ip != customIP:
+                print('oi deu tudo errado')
                 table.remove(i)
             isOnTable = False
 
