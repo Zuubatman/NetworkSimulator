@@ -98,15 +98,19 @@ def forgotNeighbor():
             print(e)
 
 def addInTable(neighborIp, dist, exitIp):
-    if neighborIp == customIP or exitIp == serverSocket or neighborIp==exitIp[0]: return False
-    for i in table:
+    if neighborIp == customIP or exitIp == serverSocket: return False
+    var=True
+    for i in table:  
         if i['neighborIp'] == neighborIp:
+            var=False
             if dist < i['dist']:
+                var=True
                 table.remove(i)
             else:
                 return
             break    
-    table.append({'neighborIp': neighborIp, 'dist': dist, 'exitIp': exitIp})
+    if var==False:
+        table.append({'neighborIp': neighborIp, 'dist': dist, 'exitIp': exitIp})
     print(f"Tabela adicionada com o ip: {neighborIp} e métrica: {dist}.")
     return True
 
