@@ -33,6 +33,7 @@ def listen():
                 
             elif msg.startswith('@'):
                 routes = msg.split('@')[1:]
+                compareTable(clientAddress, routes)
                 for route in routes:
                     parts = route.split('-')
                     ip = parts[0]  
@@ -85,7 +86,7 @@ def forgotNeighbor():
             for neighborIp, lastTime in list(lastMSG.items()):
                 if currentTime - lastTime > 35:
                     for i in table:
-                        if i['neighborIp'] == neighborIp:
+                        if i['neighborIp'] == neighborIp and i['dist']==1:
                             table.remove(i)
                     print(f"Vizinho {neighborIp} está inativo a mais de 35 segundos e foi removido.")
                     del lastMSG[neighborIp]  
@@ -97,7 +98,7 @@ def forgotNeighbor():
             print(e)
 
 def addInTable(neighborIp, dist, exitIp):
-    # não ter rota para ele mesmo.
+    if neighborIp == customIP or exitIp == serverSocket: return False
     for i in table:
         if i['neighborIp'] == neighborIp:
             if dist < i['dist']:
@@ -108,6 +109,23 @@ def addInTable(neighborIp, dist, exitIp):
     table.append({'neighborIp': neighborIp, 'dist': dist, 'exitIp': exitIp})
     print(f"Tabela adicionada com o ip: {neighborIp} e métrica: {dist}.")
     return True
+
+def compareTable(clientAdress, routes):
+    for i in table:
+        if i['exitIp'] == clientAdress:
+            isOnTable = False
+            for route in routes:
+                    parts = route.split('-')
+                    ip = parts[0]  
+                    dist = int(parts[1])  
+                    if i['neighborIp'] == ip:
+                        isOnTable = True
+                        if i['dist'] < dist+1:
+                            i['dist'] = i['dist'] +1
+            if isOnTable == False:
+                table.remove(i)
+            isOnTable = False
+
 
 def sendMSGNeighbor(msg):
     for i in table:
