@@ -86,7 +86,7 @@ def forgotNeighbor():
             for neighborIp, lastTime in list(lastMSG.items()):
                 if currentTime - lastTime > 35:
                     for i in table:
-                        if i['neighborIp'] == neighborIp or i['exitIp'][0]==neighborIp:
+                        if i['exitIp'][0]==neighborIp: #i['neighborIp'] == neighborIp or 
                             table.remove(i)
                     print(f"Vizinho {neighborIp} está inativo a mais de 35 segundos e foi removido.")
                     del lastMSG[neighborIp]  
@@ -98,7 +98,7 @@ def forgotNeighbor():
             print(e)
 
 def addInTable(neighborIp, dist, exitIp):
-    if neighborIp == customIP or exitIp == serverSocket: return False
+    if neighborIp == customIP: return False
     var=True
     for i in table:  
         if i['neighborIp'] == neighborIp:
@@ -125,7 +125,7 @@ def compareTable(clientAdress, routes):
                         isOnTable = True
                         if i['dist'] < dist+1:
                             i['dist'] = i['dist'] +1
-            if isOnTable == False and ip != customIP:
+            if isOnTable == False and i['neighborIp'] != clientAdress[0]:
                 print('oi deu tudo errado')
                 table.remove(i)
             isOnTable = False
@@ -164,7 +164,7 @@ def scheduleRouteAnnouncement():
 
 
 def readNeighbors():
-    neighborsFile = 'Roteadores.txt'
+    neighborsFile = 'roteadores.txt'
 
     with open(neighborsFile, 'rb') as file:
             neighborsRaw = file.read()
@@ -177,6 +177,7 @@ def readNeighbors():
         routerAddress = (i, 9000)
         serverSocket.sendto(('*'+customIP).encode(), routerAddress)
         addInTable(i, 1, routerAddress)
+        lastMSG[routerAddress[0]] = time.time()
 
 
 def run () :
