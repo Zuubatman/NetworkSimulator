@@ -20,7 +20,6 @@ def listen():
     while True:
         try:
             message, clientAddress = serverSocket.recvfrom(2048)
-            print(f"Listening Address: {clientAddress}")
             msg = message.decode('utf-8')  
             print(msg)
 
@@ -62,22 +61,18 @@ def listen():
         except Exception as e:
             print(e)
 def sendMSG():
-    while True:
-        try:
-            routerIp = input("Informe o endereço IP do roteador destino: \n")
-            message = input("Digite a mensagem que deseja enviar: \n")
-            message = '!'+ customIP +';' + routerIp + ';' +message
-            for i in table:
-                if i['neighborIp'] == routerIp:
-                    serverSocket.sendto(message.encode(), i['exitIp'])
-                    print(f"Mensagem enviada para {routerIp}: {message}")
-                    break
-            else: print("Roteador não encontrado na tabela.")
-        except timeout:      
-            continue
-        
-        except Exception as e:
-            print(e)
+    try:
+        routerIp = input("Informe o endereço IP do roteador destino: \n")
+        message = input("Digite a mensagem que deseja enviar: \n")
+        message = '!'+ customIP +';' + routerIp + ';' +message
+        for i in table:
+            if i['neighborIp'] == routerIp:
+                serverSocket.sendto(message.encode(), i['exitIp'])
+                print(f"Mensagem enviada para {routerIp}: {message}")
+                break
+        else: print("Roteador não encontrado na tabela.")       
+    except Exception as e:
+        print(e)
 
 def forgotNeighbor():
     while True:
@@ -85,10 +80,10 @@ def forgotNeighbor():
             currentTime = time.time()
             for neighborIp, lastTime in list(lastMSG.items()):
                 if currentTime - lastTime > 35:
-                    for i in table:
-                        if i['exitIp'][0]==neighborIp: #i['neighborIp'] == neighborIp or 
-                            table.remove(i)
-                    print(f"Vizinho {neighborIp} está inativo a mais de 35 segundos e foi removido.")
+                    to_remove = [i for i in table if i['exitIp'][0] == neighborIp]
+                    for entry in to_remove:
+                        table.remove(entry)
+                    print(f"Vizinho {neighborIp} e todas as rotas que passam por ele foram removidos por inatividade.")
                     del lastMSG[neighborIp]  
             time.sleep(5)
         except timeout:      
@@ -158,9 +153,6 @@ def scheduleRouteAnnouncement():
     while True:
         routeAnnouncement()
         time.sleep(15)
-        routeAnnouncement()
-        time.sleep(15)
-        showRoutesTable()
 
 
 def readNeighbors():
@@ -179,6 +171,20 @@ def readNeighbors():
         addInTable(i, 1, routerAddress)
         lastMSG[routerAddress[0]] = time.time()
 
+def menu():
+    while True:
+        print("\n[1] Mostrar tabela de roteamento")
+        print("[2] Mandar mensagem para roteador específico")
+        print("[3] Sair")
+        option = input("Escolha uma opção:\n")
+        if option == '1':
+            showRoutesTable()
+        elif option == '2':
+            sendMSG()
+        elif option == '3':
+            break
+        else:
+            print("Opção inválida!")
 
 def run () :
     print(f"Starting Router {serverSocket}")
@@ -186,6 +192,6 @@ def run () :
     readNeighbors()
     threading.Thread(target=scheduleRouteAnnouncement).start()
     threading.Thread(target=forgotNeighbor).start()
-    threading.Thread(target=sendMSG).start()
+    menu()
 
 run()
