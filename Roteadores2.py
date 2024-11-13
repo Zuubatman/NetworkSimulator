@@ -4,7 +4,7 @@ import time
 
 serverPort = 9000
 
-customIP = '10.132.104.59'
+customIP = '192.168.15.82'
 
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 
@@ -20,6 +20,7 @@ def listen():
     while True:
         try:
             message, clientAddress = serverSocket.recvfrom(2048)
+            print(f"Listening Address: {clientAddress}")
             msg = message.decode('utf-8')  
             print(msg)
 
@@ -80,8 +81,8 @@ def forgotNeighbor():
             currentTime = time.time()
             for neighborIp, lastTime in list(lastMSG.items()):
                 if currentTime - lastTime > 35:
-                    to_remove = [i for i in table if i['exitIp'][0] == neighborIp]
-                    for entry in to_remove:
+                    toRemove = [i for i in table if i['exitIp'][0] == neighborIp]
+                    for entry in toRemove:
                         table.remove(entry)
                     print(f"Vizinho {neighborIp} e todas as rotas que passam por ele foram removidos por inatividade.")
                     del lastMSG[neighborIp]  
